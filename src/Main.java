@@ -37,46 +37,44 @@ public class Main {
             throw new IllegalArgumentException("Порожній текст");
         }
 
-        // Розділимо слова та розділові знаки та запишемо номери позицій слів, розділових знаків та пробілів
+        // Розділимо текст на елементи (слова та послідовності інших символів)
         List<StringBuffer> words = new ArrayList<>();
-        List<Character> punctuation = new ArrayList<>();
-        List<Integer> wordPositions = new ArrayList<>();
-        List<Integer> punctuationPositions = new ArrayList<>();
-        List<Integer> spacePositions = new ArrayList<>();
-        int elementNumber = -1;
-        StringBuffer currentWord = new StringBuffer();
+        List<StringBuffer> delimitations = new ArrayList<>();
+        StringBuffer currentElement = new StringBuffer();
+        boolean isWordCurrent = Character.isLetterOrDigit(text.charAt(0));
+        List<Boolean> isWord = new ArrayList<>();
+        int numberOfElements = 0;
         // У циклі проходимо по всім символам
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i);
-            if (Character.isWhitespace(ch)) {
-                // Якщо символ є пробілом, записуємо нове слово
-                if (!currentWord.isEmpty()) {
-                    words.add(currentWord);
-                    currentWord = new StringBuffer();
+            // Якщо поточний символ не того ж роду, що і попередній, додаємо новий елемент
+            if (Character.isLetterOrDigit(ch) != isWordCurrent) {
+                if (isWordCurrent) {
+                    words.add(currentElement);
+                    isWord.add(true);
+
                 }
-                elementNumber++;
-                spacePositions.add(elementNumber);
-            } else if (Character.isLetterOrDigit(ch)) {
-                // Якщо символ є літерою чи цифрою, записуємо його у слово
-                if (currentWord.isEmpty()) {
-                    elementNumber++;
-                    wordPositions.add(elementNumber);
+                else {
+                    delimitations.add(currentElement);
+                    isWord.add(false);
                 }
-                currentWord.append(ch);
-            } else {
-                // Якщо символ інший, записуємо його до розділових знаків та записуємо нове слово
-                if (!currentWord.isEmpty()) {
-                    words.add(currentWord);
-                    currentWord = new StringBuffer();
-                }
-                punctuation.add(ch);
-                elementNumber++;
-                punctuationPositions.add(elementNumber);
+                isWordCurrent = !isWordCurrent;
+                numberOfElements++;
+                currentElement = new StringBuffer();
             }
+            currentElement.append(ch); // Додаємо символ до поточного елементу
         }
-        // За наявності додаємо останнє слово
-        if (!currentWord.isEmpty()) {
-            words.add(currentWord);
+        // За наявності додаємо останній елемент
+        if (!currentElement.isEmpty()) {
+            if (isWordCurrent) {
+                words.add(currentElement);
+                isWord.add(true);
+            }
+            else {
+                delimitations.add(currentElement);
+                isWord.add(false);
+            }
+            numberOfElements++;
         }
 
         // Сортуємо слова
@@ -85,18 +83,15 @@ public class Main {
         // Знову об'єднуємо все в єдиний текст
         StringBuffer sortedText = new StringBuffer();
         int wordCounter = 0;
-        int punctuationCounter = 0;
-        for (int i = 0; i <= elementNumber; i++) {
-            if (wordPositions.contains(i)) {
+        int delimitationsCounter = 0;
+        for (int i = 0; i < numberOfElements; i++) {
+            if (isWord.get(i)) { // Якщо на цій позиції слово
                 sortedText.append(words.get(wordCounter));
                 wordCounter++;
             }
-            else if (punctuationPositions.contains(i)) {
-                sortedText.append(punctuation.get(punctuationCounter));
-                punctuationCounter++;
-            }
-            else if (spacePositions.contains(i)) {
-                sortedText.append(" ");
+            else { // Інакше
+                sortedText.append(delimitations.get(delimitationsCounter));
+                delimitationsCounter++;
             }
         }
 
